@@ -12,7 +12,12 @@ int len_str(char* str) {
 	return i;
 }
 
-void readline(FILE* file, char** char_per) {
+int is_letter(char let) {
+	if (('A' <= let && let <= 'Z') || ('a' <= let && let <= 'z')) return 1;
+	return 0;
+}
+
+int readline(FILE* file, char** char_per) {
 	*char_per = realloc(*char_per, sizeof(char));
 	int cur_pos = 0;
 	char cur_symb = getc(file);
@@ -22,50 +27,49 @@ void readline(FILE* file, char** char_per) {
 		cur_symb = getc(file);
 	}
 	(*char_per)[cur_pos] = '\0';
-	//printf("%s\n", *char_per);
 }
 
-void find() {
-	int cur_pos_text = 0;
+void find(int cur_pos_text) {
 	int cur_pos_from = 0;
 	int start;
-	while (text[cur_pos_text] != '\0') {
-		if (text[cur_pos_from] == from[cur_pos_from]) {
-			start = cur_pos_text;
+	for (cur_pos_text; cur_pos_text <= len_str(text); cur_pos_text++) {
+		if (cur_pos_text != len_str(text) && text[cur_pos_text] == from[cur_pos_from]) {
+			if (cur_pos_from == 0) start = cur_pos_text;
 			cur_pos_from++;
 		}
-		else if (cur_pos_from != 0 && text[cur_pos_text] == ' ') {
-			cur_pos_text = replacement(start, cur_pos_text - 1);
-			cur_pos_from = 0;
+		else if (cur_pos_from == len_str(from) && (cur_pos_text == len_str(text) || !is_letter(text[cur_pos_text])) && (start == 0 || !is_letter(text[start - 1]))) {
+			find(replacement(start, cur_pos_text - 1));
+			return;
 		}
-		else {
-		cur_pos_from = 0;
-		}
-		cur_pos_text++;
-
+		else cur_pos_from = 0;
 	}
 
 }
 
 int replacement(int start, int finish) {
 	
-	int razn = len_str(to) - (finish - start); // на сколько заменяемое больше исходного
+	int to_len = len_str(to);
+	int razn = to_len - len_str(from); // на сколько заменяемое больше исходного
+	int txt_len = len_str(text) + razn;
 	if (razn > 0) {
-		text = realloc(text, sizeof(char) + razn);
-		for (int i = len_str(text) - 1; i > finish; i--) {
-			text[i] = text[i - 1];
+		text = realloc(text, sizeof(char) * (txt_len + 1));
+		for (int i = (txt_len)-1; i > (finish + razn); i--) {
+			text[i] = text[i - razn];
 		}
 	}
 	else if (razn < 0) {
-		//for (int i = finish - razn; i < ){
-		//
-		//}
+		for (int i = (finish + razn + 1); i < txt_len; i++) {
+			text[i] = text[i + 1];
+		}
+		text[txt_len] = '\0';
+		text = realloc(text, sizeof(char) * (txt_len + 1));
 	}
 
-	return;
-	//for (int i = start; )
-
-
+	for (int i = 0; i < to_len; i++) {
+		text[start + i] = to[i];
+	}
+	text[txt_len] = '\0';
+	return finish + razn + 1;
 }
 
 void main() {
@@ -74,13 +78,9 @@ void main() {
 	input_file = fopen("input.txt", "r");
 	from_file = fopen("from.txt", "r");
 	to_file = fopen("to.txt", "r");
-	complete_file = fopen("output.txt", "r");
+	complete_file = fopen("output.txt", "w");
 
 
-
-	//char* output = malloc(sizeof(char));
-	
-	
 	//кол-во слов для замены
 	int count_lines = 0;
 	char cur_char = getc(from_file);
@@ -90,12 +90,22 @@ void main() {
 		cur_char = getc(from_file);
 	}
 	count_lines++;
+	rewind(from_file);
 
 	//readzzzzz
 	readline(input_file, &text);
-		while (text[0] != NULL) {
-			printf("%s\n", text);
-			readline(input_file, &text);
-	}
 
+		while (text[0] != NULL) {
+			for (int i = 0; i < count_lines; i++) {
+				readline(from_file, &from);
+				readline(to_file, &to);
+				find(0);
+			}
+			fprintf(complete_file, "%s\n", text);
+			readline(input_file, &text);
+			rewind(from_file);
+			rewind(to_file);
+	}
+		free(text); free(from); free(to);
+		fclose(input_file); fclose(from_file); fclose(to_file); fclose(complete_file);
 }
