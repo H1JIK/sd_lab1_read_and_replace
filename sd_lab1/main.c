@@ -29,25 +29,7 @@ int readline(FILE* file, char** char_per) {
 	(*char_per)[cur_pos] = '\0';
 }
 
-void find(int cur_pos_text) {
-	int cur_pos_from = 0;
-	int start;
-	for (cur_pos_text; cur_pos_text <= len_str(text); cur_pos_text++) {
-		if (cur_pos_text != len_str(text) && text[cur_pos_text] == from[cur_pos_from]) {
-			if (cur_pos_from == 0) start = cur_pos_text;
-			cur_pos_from++;
-		}
-		else if (cur_pos_from == len_str(from) && (cur_pos_text == len_str(text) || !is_letter(text[cur_pos_text])) && (start == 0 || !is_letter(text[start - 1]))) {
-			find(replacement(start, cur_pos_text - 1));
-			return;
-		}
-		else cur_pos_from = 0;
-	}
-
-}
-
 int replacement(int start, int finish) {
-	
 	int to_len = len_str(to);
 	int razn = to_len - len_str(from); // на сколько заменяемое больше исходного
 	int txt_len = len_str(text) + razn;
@@ -72,14 +54,35 @@ int replacement(int start, int finish) {
 	return finish + razn + 1;
 }
 
-void main() {
+void find(int cur_pos_text) {
+	int cur_pos_from = 0;
+	int start;
+	for (cur_pos_text; cur_pos_text <= len_str(text); cur_pos_text++) {
+		if (cur_pos_text != len_str(text) && text[cur_pos_text] == from[cur_pos_from]) {
+			if (cur_pos_from == 0) start = cur_pos_text;
+			cur_pos_from++;
+		}
+		else if (cur_pos_from == len_str(from) && (cur_pos_text == len_str(text) || !is_letter(text[cur_pos_text])) && (start == 0 || !is_letter(text[start - 1]))) {
+			find(replacement(start, cur_pos_text - 1));
+			return;
+		}
+		else cur_pos_from = 0;
+	}
+
+}
+
+void main(int argc, char** argv) {
 
 	FILE* input_file, *from_file, *to_file, *complete_file;
-	input_file = fopen("input.txt", "r");
-	from_file = fopen("from.txt", "r");
-	to_file = fopen("to.txt", "r");
-	complete_file = fopen("output.txt", "w");
-
+	input_file = fopen(argv[1], "r");
+	from_file = fopen(argv[2], "r");
+	to_file = fopen(argv[3], "r");
+	complete_file = fopen(argv[4], "w");
+	
+	//input_file = fopen("input.txt", "r");
+	//from_file = fopen("from.txt", "r");
+	//to_file = fopen("to.txt", "r");
+	//complete_file = fopen("output.txt", "w");
 
 	//кол-во слов для замены
 	int count_lines = 0;
@@ -95,7 +98,7 @@ void main() {
 	//readzzzzz
 	readline(input_file, &text);
 
-		while (text[0] != NULL) {
+		while (text[0] != '\0') {
 			for (int i = 0; i < count_lines; i++) {
 				readline(from_file, &from);
 				readline(to_file, &to);
